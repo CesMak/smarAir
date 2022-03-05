@@ -1,0 +1,16 @@
+[Unit]
+Description=send Email with Logging service
+After=multi-user.target
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python3 /home/pi/send_mail.py
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target
+
