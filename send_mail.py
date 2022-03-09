@@ -2,6 +2,7 @@
 
 # Changelog:
 # v0.1          worked for one and two DHT Sensor Data (see files in data)
+# v0.2          added min, max Option
 
 # TODO:
 #make a label with min, max values in each plot
@@ -17,6 +18,7 @@ from email.utils import COMMASPACE, formatdate
 from email import encoders
 
 # required for plotting and file handling
+import operator
 import os
 import fileinput
 import re
@@ -29,9 +31,10 @@ password_send_mail = ''          # TODO edit PW here!
 email_add          = ''     # check if sending works: https://myaccount.google.com/lesssecureapps?pli=1
 send_mail_to       = ''
 
-#for local tests: /home/markus/Documents/PIZero/data/oneDHTSensor
+#for local tests: /home/markus/Documents/PIZero/data/twoDHTSensor
 #on the pi: /home/pi
-logging_files_dir  = "/home/markus/Documents/PIZero/data/oneDHTSensor"
+logging_files_dir  = "/home/pi"
+include_min_max    = True # include min, max points in the plots
 
 def send_mail(send_from, send_to, subject, message, files=[],
               server="smtp.gmail.com", port=587, username=email_add, password=password_send_mail,
@@ -115,6 +118,23 @@ def merge_log_files(files):
             result["temperature_inside"].append(float(p[4]))
     return result
 
+def annot_max_min(x,y, ax=None):
+    xmax = x[y.index(max(y))]
+    ymax = max(y)
+    xmin = x[y.index(min(y))]
+    ymin = min(y)
+    if ymax<100 and ymin>-100:
+        textmax= "y={:.1f}".format(ymax)+"\nx="+str(xmax)
+        textmin= "y={:.1f}".format(ymin)+"\nx="+str(xmin)
+        if not ax:
+            ax=plt.gca()
+        bbox_props = dict(boxstyle="square,pad=0.2", fc="w", ec="k", lw=0.7)
+        arrowprops=dict(arrowstyle="->",connectionstyle="angle,angleA=0,angleB=60")
+        kw = dict(xycoords='data', textcoords="offset points",
+                  arrowprops=arrowprops, bbox=bbox_props)
+        ax.annotate(textmax, xy=(xmax, ymax), xytext=(10, 10), fontsize=6, **kw)
+        ax.annotate(textmin, xy=(xmin, ymin), xytext=(10, 10), fontsize=6, **kw)
+
 def plot_file(x, y1, y2, last_values=0):
     # delete empty lists:
     y1 = [t for t in y1 if t != []]
@@ -146,10 +166,14 @@ def plot_file(x, y1, y2, last_values=0):
         colors_temp=['*b','*c','*b']
         for c,i in enumerate(yy1):
             axs[0].plot(x, i, colors_hum[c], label="tmp_"+labels[c])
+            if include_min_max:
+                annot_max_min(x, i, axs[0])
             if abs(max(i, key=abs))>100:
                 limit_temp = True
         for c,j in enumerate(yy2):
             axs[1].plot(x, j, colors_temp[c], label="hum_"+labels[c])
+            if include_min_max:
+                annot_max_min(x, j, axs[1])
             if abs(max(j, key=abs))>100:
                 limit_hum = True
         if limit_temp:
@@ -177,8 +201,8 @@ def plot_files():
         print("I found "+str(len(log_files))+" logging files.")
     result = merge_log_files(log_files)
     # one sorted line looks like: 2022-02-21 16:39:52 	31107	19.9	56.4
-    if not len(result["dates"])>1000:
-        print("Sry nothing is plotted your logging just contains: "+str(len(sorted_lines))+" lines.")
+    if not len(result["dates"])>10:
+        print("Sry nothing is plotted your logging just contains: "+str(len(log_files))+" lines.")
         return []
 
     # plot the images here:

@@ -17,6 +17,7 @@
 ## Usefull commands
 ```bash
 #Login:
+ssh pi@pitwo.local # for second raspberry pi!
 ssh pi@raspberrypi.local PW=raspberry
 # Copy logging files from REMOTE to your PC
 sudo scp -r pi@raspberrypi:*_logging.txt ~
@@ -29,6 +30,8 @@ sudo systemctl status send_mail.service
 ```
 
 ## TODO
+* use this lib: https://github.com/adafruit/Adafruit_CircuitPython_DHT#basics
+* cause with my current lib no negative Value work!!!
 * LiCR!
 * picle stuff
 * optinal: webstation: https://medium.com/initial-state/build-an-inexpensive-network-of-web-connected-temperature-sensors-using-pi-zeros-730a40f1fb60
