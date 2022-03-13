@@ -10,10 +10,8 @@
 * optinal [powerbank](https://www.amazon.de/iposible-Powerbank-%E3%80%90Neuestes-Kapazitat-Ladeger%C3%A4t/dp/B07MKRTPTT/ref=sr_1_4_sspa?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=powerbank+20000mah+raspberry+pi&qid=1607718391&sr=8-4-spons&psc=1&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUFQWlRPTFMxODBYUjMmZW5jcnlwdGVkSWQ9QTAyMjY3NDMxV1QyTkNVSjM2RlBJJmVuY3J5cHRlZEFkSWQ9QTA1NTM3OTIzVEJIT0RZQkRGVUhWJndpZGdldE5hbWU9c3BfYXRmJmFjdGlvbj1jbGlja1JlZGlyZWN0JmRvTm90TG9nQ2xpY2s9dHJ1ZQ==)
 * >=4Gb SD-card
 
-**Setup inside outside sensor**
-<img src="doc/sensors.jpg" alt="drawing" width="200"/>
-**Inside the Box**
-<img src="doc/pi_zero_box.jpg" alt="drawing" width="200"/>
+![Alt text](doc/sensors.jpg?raw=true "Setup"| width=100)
+![Alt text](doc/pi_zero_box.jpg?raw=true "Inside the Box" | width=100)
 ![Alt text](doc/pinout.png?raw=true "PinOut")
 
 # Changelog
