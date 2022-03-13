@@ -1,11 +1,6 @@
 #!/usr/bin/python3
 
-# Changelog:
-# v0.1          worked for one and two DHT Sensor Data (see files in data)
-# v0.2          added min, max Option
-
 # TODO:
-#make a label with min, max values in each plot
 # once  a week make a pickle format of all txt files and kick out many data points!
 # make this as extra service and read pickle files in here as well!
 
