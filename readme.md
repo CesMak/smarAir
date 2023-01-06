@@ -28,7 +28,11 @@ see commits
 ssh pi@pitwo.local # for second raspberry pi!
 ssh pi@raspberrypi.local PW=raspberry
 # Copy logging files from REMOTE to your PC
-sudo scp -r pi@raspberrypi:*_logging.txt ~
+sudo scp -r pi@raspberrypi.local:*_logging.txt ~/Documents
+sudo scp -r pi@raspberrypi:*.png ~/Documents
+sudo scp -r pi@raspberrypi:/etc/systemd/system/send_mail.service ~/Documents
+sudo scp -r pi@raspberrypi:/etc/systemd/system/send_mail.timer ~/Documents
+sudo scp -r pi@raspberrypi:/etc/systemd/system/dht_logger.service ~/Documents
 # get Logging
 journalctl -u dht_logger.service
 journalctl -u send_mail.service
@@ -158,7 +162,6 @@ OnCalendar=*-*-* 07:00:00
 Unit=send_mail.service
 Persistent=true
 ```
-
 * If you want to use an outside sensor
  + max. cable length for 5V -> 30m
  + max. cable length for 3.3V -> 1m
@@ -170,6 +173,17 @@ Persistent=true
 * Multiply your setup
   + e.g. you have the same setup double do these commands for the SD card of your   setup1
   + Follow [this](https://askubuntu.com/questions/227924/sd-card-cloning-using-the-dd-command) for cloning to another SD card: worked out of the box!
+  + you can also check [this setup](https://www.pragmaticlinux.com/2020/12/how-to-clone-your-raspberry-pi-sd-card-in-linux/)
+  ```
+  lsblk -p
+  sudo dd bs=4M if=/dev/mmcblk0 of=~/Downloads/circ_adafruit_5.1_raspbian_lite.img conv=fsync
+  # for shrinking (from 15Gb to 2.7Gb)
+  cd ~
+  wget https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh
+  chmod +x pishrink.sh
+  sudo mv pishrink.sh /usr/local/sbin/pishrink
+  sudo pishrink ~/Downloads/pi_img.img
+  ```
   + Change hostname for multiple pi's:
   ```
      ssh pi@raspberrypi.local

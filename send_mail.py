@@ -26,9 +26,9 @@ password_send_mail = ''          # TODO edit PW here!
 email_add          = ''     # check if sending works: https://myaccount.google.com/lesssecureapps?pli=1
 send_mail_to       = ''
 
-#for local tests: /home/markus/Documents/PIZero/data/twoDHTSensor
+#for local tests: /home/markus/Documents/PIZero_smartAir/data/twoDHTSensor
 #on the pi: /home/pi
-logging_files_dir  = "/home/pi"
+logging_files_dir  = "/home/markus/Documents/PIZero_smartAir/data/manyFiles"
 include_min_max    = True # include min, max points in the plots
 
 def send_mail(send_from, send_to, subject, message, files=[],
@@ -185,6 +185,22 @@ def plot_file(x, y1, y2, last_values=0):
 
     return logging_files_dir+"/"+name
 
+def runningMean(xx, N):  
+    #delete empty lists:
+    x = [t for t in xx if t != []]
+    y = len(x)*[0]
+    for ctr in range(len(x)):
+         y[ctr] = sum(x[ctr:(ctr+N)])/N
+    return y
+    
+    # use average of N days!
+    x = [t for t in xx if t != []]
+    x = x[0:len(x)-len(x)%N]
+    y = []
+    for i in range(0, len(x)+1, N):
+    	y.append(sum(x[i:i+N])/N)
+    return y[0:len(y)-1]
+
 def plot_files():
     # get all logging files with name _logging.txt in /home/file
     log_files = get_logging_files(home_dir=logging_files_dir)
@@ -208,12 +224,24 @@ def plot_files():
         y1 = [result["temperature_outside"], result["temperature_inside"]]
         y2 = [result["humidity_outside"], result["humidity_inside"]]
     result_files = []
-    result_files.append(plot_file(x,y1,y2, last_values=10))
-    result_files.append(plot_file(x,y1,y2, last_values=100))
-    result_files.append(plot_file(x,y1,y2, last_values=1000))
-    result_files.append(plot_file(x,y1,y2, last_values=5000))
+    #result_files.append(plot_file(x,y1,y2, last_values=10))
+    #result_files.append(plot_file(x,y1,y2, last_values=100))
+    #result_files.append(plot_file(x,y1,y2, last_values=1000))
+    #result_files.append(plot_file(x,y1,y2, last_values=5000))
+    #result_files.append(plot_file(x,y1,y2, last_values=0))
+    # calc floating average in a smart way!
+    
+    #runningMean(y1[0], 5)
+    
+    #N = 5000
+    #x = x[0:len(x)-len(x)%N]
+    #x = x[::N]
+    #print(len(x))
+    #y1 = [runningMean(y1[0], N), runningMean(y1[1], N)]
+    #y2 = [runningMean(y2[0], N), runningMean(y2[1], N)]
+    #print(len(y1[0]))
     result_files.append(plot_file(x,y1,y2, last_values=0))
     return result_files
 
 img_file_names = plot_files()
-send_mail(email_add, send_mail_to, "Temperature and Humidity values", "", files=img_file_names)
+#send_mail(email_add, send_mail_to, "Temperature and Humidity values", "", files=img_file_names)
