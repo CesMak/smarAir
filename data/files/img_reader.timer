@@ -1,0 +1,10 @@
+[Unit]
+Description= runs every hour
+
+[Timer]
+OnCalendar=hourly
+Unit=img_reader.service
+Persistent=true
+
+[Install]
+WantedBy=default.target

@@ -72,6 +72,92 @@ There are two libs around - I tested both of them:
 * [Adafruit-lib](https://github.com/adafruit/Adafruit_Python_DHT)
   + got problems with negative temperature values
 
+### Full SetUp pitwo - with camera!
+setup a second pi zwero wh
+* `sudo apt-get install rpi-imager`
+* Choose Raspberry PI OS Lite (32Bit) 2023
+* [Click on options (zahnrad) and configure as well](https://www.youtube.com/watch?v=1XteC7M-5jY&t=127s):
+![Alt text](doc/pitwo.png?raw=true "pitwo-setup")
+* connect pitwo camera pizerocam  [OV5647, RPIZ CAM 5MP 170](https://www.reichelt.de/raspberry-pi-zero-kamera-5mp-170--rpiz-cam-5mp-170-p242690.html?PROVID=2788&gclid=Cj0KCQjwn_OlBhDhARIsAG2y6zODyowiMufgdxva6yoZirPBDo6l1kWdkvO0qt-tHHQRzedq9BVGHJgaAvnxEALw_wcB)
+* ssh pitwo@pitwo
+* Check if these commands work out of the box:
+
+  + `libcamera-still --width 1280 --height 800 -n 1 -t 1 -o out.jpg`
+  + on your pc: `scp pitwo@pitwo:/home/pitwo/out.jpg ~/Desktop/out.jpg`
+  + `python3`
+
+* Connect LED GPIO 27 and Ground create a python file using nano and execut it:
+```python
+from gpiozero import LED #imports the LED functions from gpiozero library
+from picamera2 import Picamera2
+from libcamera import Transform
+import time
+led = LED(27) #declared gpio pin 10
+led.on() #turn on led
+picam2 = Picamera2()
+
+picam2.configure(picam2.create_preview_configuration())
+picam2.start()
+
+# Run for a second to get a reasonable "middle" exposure level.
+time.sleep(1)
+metadata = picam2.capture_metadata()
+exposure_normal = metadata["ExposureTime"]
+gain = metadata["AnalogueGain"] * metadata["DigitalGain"]
+picam2.stop()
+controls = {"ExposureTime": exposure_normal, "AnalogueGain": gain}
+capture_config = picam2.create_preview_configuration(main={"size": (1024, 768),
+                                                           "format": "RGB888"},
+                                                     controls=controls)
+
+exposure_long = int(exposure_normal * 5)
+picam2.set_controls({"ExposureTime": exposure_long, "AnalogueGain": gain})
+picam2.start()
+camera_config = picam2.create_still_configuration(main={"size": (2592, 1944)}, transform=Transform(270))
+time.sleep(2)
+picam2.switch_mode_and_capture_file("still", "test.jpg")
+picam2.stop()
+
+# picam2.configure(camera_config)
+# time.sleep(2)
+
+picam2.stop()
+time.sleep(1)
+led.off()
+```
+* install opencv on pi zero with [this](https://qengineering.eu/install-opencv-lite-on-raspberry-pi.html)
+* finally I got:
+```bash
+pitwo@pitwo:~/opencv/build $ python3
+Python 3.9.2 (default, Mar 12 2021, 04:06:34) 
+[GCC 10.2.1 20210110] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import cv2
+>>> cv2.__version__
+'4.8.0-dev'
+>>> 
+```
+* That is aweasome now we can do image processing using opencv on our pi zero wh!!!
+* image processing is done [using](https://pyimagesearch.com/2017/02/13/recognizing-digits-with-opencv-and-python/)
+* Next we use this code TODO
+* to copy files:
+* `scp pitwo@pitwo:/home/pitwo/*.png /home/markus/Desktop/smarAir/imgProcessing/orginalDataStorage/`
+* make a img_reader.timer and img_reader.service file - content see in files
+```bash
+chmod +x imgReader/imgScraper.py
+# under /etc/systemd/system
+chmod +x /etc/systemd/system/[img_reader.service, img_reader.timer]
+sudo systemctl enable img_reader.service
+sudo systemctl enable img_reader.timer
+sudo reboot
+sudo systemctl status img_reader.service
+
+# other commands
+sudo systemctl daemon-reload
+sudo systemctl start send_mail.timer
+sudo systemctl list-timers --all
+```
+
 ### Full SetUp
 * `sudo apt-get install rpi-imager`
 * Choose Raspberry PI OS Lite (32Bit) 2022-01-28
