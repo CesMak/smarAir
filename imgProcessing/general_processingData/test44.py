@@ -147,36 +147,48 @@ cnts = imutils.grab_contours(contours)
 bigCnts = []
 digitCnts = []
 ones_foundBig = []
+tmpIMG = deepcopy(cropped2)
+
 # loop over the digit area candidates
 for c in cnts:
 	# compute the bounding box of the contour
 	(x, y, w, h) = cv2.boundingRect(c)
-	# if the contour is sufficiently large, it must be a digit
-	if w >= 15 and (h >= 30):
-		if w*h>500 and w*h<550 and w<50:
-			digitCnts.append(c)
+	tmpIMG = cv2.rectangle(tmpIMG,(x,y),(x+w,y+h),(255,255,255),1)
+	tmpIMG = cv2.putText(tmpIMG, str(w*h), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0,0,250), 1, cv2.LINE_AA, False)
+cv2.imwrite("9a.png", tmpIMG) # -> bounding rects found!
+
+# loop over the digit area candidates
+for c in cnts:
+	# compute the bounding box of the contour
+	(x, y, w, h) = cv2.boundingRect(c)
+	if w*h>400:
+		if w*h<600 and w<20:
+			digitCnts.append(c) # small digits on the right
+			continue
+		elif w*h>1500:
+			bigCnts.append(c)
 			continue
 		else:
-			if w*h>1550: # removing inner rectangles!
-				bigCnts.append(c)
-				continue
-	elif h>25 and w<15 and w>5 and h<40: # detect 1s
-		ones_foundBig.append(c)
-
-digitCntsSmall = imutils.contours.sort_contours(digitCnts, method="left-to-right")[0]
-digitCntsBig = imutils.contours.sort_contours(bigCnts, method="left-to-right")[0]
-digitOnesBig = imutils.contours.sort_contours(ones_foundBig, method="left-to-right")[0]
-if (len(digitOnesBig) % 2) != 0:
-	digitOnesBig = digitOnesBig[:-1]
-
-# merge ones contours:
-digitCntsOnesBig = []
-for i in range(len(digitOnesBig)-1):
-	digitCntsOnesBig.append(vstack([digitOnesBig[i], digitOnesBig[i+1]]))
+			continue
+	else:
+		if (h>25 and w<15 and w>5 and h<40 and w*h<250): # detect 1s
+			ones_foundBig.append(c)
 
 allContours = []
-for i in digitCntsOnesBig:
-	allContours.append(i)
+digitCntsSmall = imutils.contours.sort_contours(digitCnts, method="left-to-right")[0]
+digitCntsBig = imutils.contours.sort_contours(bigCnts, method="left-to-right")[0]
+if len(ones_foundBig)>0:
+	digitOnesBig = imutils.contours.sort_contours(ones_foundBig, method="left-to-right")[0]
+	if (len(digitOnesBig) % 2) != 0:
+		digitOnesBig = digitOnesBig[:-1]
+
+	# merge ones contours:
+	digitCntsOnesBig = []
+	for i in range(len(digitOnesBig)-1):
+		digitCntsOnesBig.append(vstack([digitOnesBig[i], digitOnesBig[i+1]]))
+
+	for i in digitCntsOnesBig:
+		allContours.append(i)
 for i in digitCntsSmall:
 	allContours.append(i)
 for i in digitCntsBig:
@@ -210,10 +222,10 @@ ret, thresh = cv2.threshold(gray4, 0, 255,	cv2.THRESH_BINARY_INV)
 cv2.imwrite("11.png", thresh) # -> bounding rects found!
 cv2.imwrite("12.png", cropped2) # -> bounding rects found!
 
-for r in rects:
-	getNumberOfRectangle(r, thresh, cropped2)
+# for r in rects:
+# 	getNumberOfRectangle(r, thresh, cropped2)
 
-#getNumberOfRectangle(rects[6], thresh, cropped2)
+getNumberOfRectangle(rects[4], thresh, cropped2)
 # # # import pytesseract
 # # # from PIL import Image
 # # # img = Image.open('/home/markus/Desktop/4.png')
