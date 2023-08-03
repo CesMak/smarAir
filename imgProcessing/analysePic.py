@@ -82,6 +82,8 @@ def getNumberOfRectangle(rect, img, colorImg, folder="", saveFig=False, print_=F
 		# 50% of the area, mark the segment as "on"
 		#print(i, round(total/float(area),2))
 		tmp = cv2.rectangle(deepcopy(colorImg),(x+xA,y+yA),(x+xB,y+yB),color=(20*i,240,0),thickness=1)
+		if area == 0: # reducing errors!
+			area = 0.001
 		tmp = cv2.putText(tmp, str(round(total/float(area),2)), (x+xA+10, y+yA+10), cv2.FONT_HERSHEY_SIMPLEX, 0.2, (0,0,250), 1, cv2.LINE_AA, False)
 		saveImg(tmp, "segment"+str(i)+".png", folder=folder, saveFig=saveFig)	
 		if total / float(area) > 0.75:
@@ -100,8 +102,7 @@ def getNumberOfRectangle(rect, img, colorImg, folder="", saveFig=False, print_=F
 	else:
 		return "S?"# Small Number!
 
-
-def analyseImg(imgName, folder="", saveFigs=False, print_=False):
+def cropImg(imgName, folder="", saveFigs=False, print_=False):
 	image = cv2.imread(imgName)
 	# pre-process the image by resizing it, converting it to
 	# graycale, blurring it, and computing an edge map
@@ -143,6 +144,15 @@ def analyseImg(imgName, folder="", saveFigs=False, print_=False):
 	offset = 2 # reducing the rectangle!
 	cropped2 = cropped[yR+offset:yR+hR-offset*15, xR+offset:xR+wR-offset*2]
 	saveImg(cropped2, "cropped2", folder=folder, saveFig=saveFigs)
+	return cropped2, xR, yR
+
+def analyseImg(imgName, folder="", saveFigs=False, print_=False, skipCrop=False):
+	cropped2, xR, yR = None, 0,0
+	if skipCrop:
+		cropped2 = cv2.imread(imgName)
+		xR, yR, c = cropped2.shape
+	else:
+		cropped2, xR, yR = cropImg(imgName, folder=folder, saveFigs=saveFigs, print_=print_)
 
 	gray3 = cv2.cvtColor(cropped2, cv2.COLOR_BGR2GRAY)
 	edged2 = cv2.Canny(gray3, 40, 80, 255)
@@ -258,13 +268,20 @@ def analyseFolder(dpath, resultFolder=""):
 		f = os.path.join(dpath, filename)
 		# checking if it is a file
 		if os.path.isfile(f):
-			text_result, imgResult = analyseImg(f, saveFigs=False, print_=False)
+			text_result, imgResult = analyseImg(f, saveFigs=False, folder="orginalDataResults", print_=False, skipCrop=True)
 			print(text_result)
 			if len(resultFolder)>0:
-				saveImg(imgResult,f,folder=resultFolder)
+				print(f)
+				saveImg(imgResult, filename, folder="orginalDataResults",saveFig=True)
 
 # For a single file do:
-text_result, imgResult = analyseImg("general_processingData/orginal2.jpg", folder="general_processingData",print_=True, saveFigs=True)
-print(text_result)
+# text_result, imgResult = analyseImg("general_processingData/orginal2.jpg", folder="general_processingData",print_=True, saveFigs=True)
+# print(text_result)
 
-#analyseFolder("orginalDataStorage/", resultFolder="orginalDataResults")
+# For an already cropped image do:
+# text_result, imgResult = analyseImg("orginalDataStorage/0_cropped25-122345.png", folder="general_processingData",print_=True, saveFigs=True, skipCrop=True)
+# print(text_result)
+
+
+#TODO many errors in rectangle / bounding box detection! requires improvement!
+analyseFolder("orginalDataStorage/", resultFolder="orginalDataResults")
