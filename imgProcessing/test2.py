@@ -36,9 +36,9 @@ def takePicture(pic_name ="test.jpg"):
 
 def saveImg(img, name="_", use_date=False):
 	global INDEX
-	img_name = str(INDEX)+"_"+name+".png"
+	img_name = "/home/pitwo/imgReader/imgs/"+str(INDEX)+"_"+name+".png"
 	if use_date:
-		img_name = "imgs/"+str(INDEX)+"_"+name+str(time.strftime("%d-%H%M%S"))+".png"		
+		img_name = "/home/pitwo/imgReader/imgs/"+str(INDEX)+"_"+name+str(time.strftime("%d-%H%M%S"))+".png"		
 	cv2.imwrite(img_name, img)
 	print("saved image: ", img_name)
 	INDEX+=1
