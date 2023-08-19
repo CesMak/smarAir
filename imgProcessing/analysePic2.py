@@ -38,18 +38,18 @@ def getBoundingRect(countour, smallRect=False):
 	oneSmallFactor = 5
 	(x, y, w, h) = cv2.boundingRect(countour)
 	if not smallRect and w*h>650 and w*h<800 and h>45 and h<62:
-		print("I found a big Number 1!")
+		#print("I found a big Number 1!")
 		x -= oneBigFactor
 		w += oneBigFactor
-	elif smallRect and w*h >200 and w*h<280 and w>5 and w<12: # one small
-		print("I found a small Number 1!")
+	elif smallRect and w*h >185 and w*h<280 and w>5 and w<12: # one small
+		#print("I found a small Number 1!")
 		x -= oneSmallFactor
 		w += oneSmallFactor
 	return (x,y,w,h)
 
 def getNumberOfRectangle(rect, img, colorImg, small=False, folder="", saveFig=False, print_=False):
 	factor_ = 0.6
-	if small: factor_ = 0.45
+	if small: factor_ = 0.53
 	(x, y, w, h) = rect
 	roi = img[y:y + h, x:x + w]
 	saveImg(cv2.rectangle(deepcopy(colorImg),(x,y),(x+w,y+h),(30,255,255),1), "roi", folder=folder, saveFig=saveFig)
@@ -150,7 +150,7 @@ def rotate(image, angle, center = None, scale = 1.0):
 def analyseImgPart(thresh, colorImg, small=False, folder="", saveFigs=False, print_=False):
 	thickness_ = 5
 	if small:
-		thickness_ = 3
+		thickness_ = 2
 	cc, _ = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 	cv2.drawContours(thresh, cc, -1, (255, 255, 255), thickness=thickness_)
 	saveImg(thresh, "contours", folder=folder, saveFig=saveFigs)
@@ -175,9 +175,8 @@ def analyseImgPart(thresh, colorImg, small=False, folder="", saveFigs=False, pri
 	for c in cnts:
 		# compute the bounding box of the contour
 		(x, y, w, h) = cv2.boundingRect(c)
-		print(w,h, w*h)
 		if small:
-			if w*h>500 or ( w*h>200 and w*h <300 and w>5 and w<12):
+			if w*h>350 or ( w*h>185 and w*h <300 and w>5 and w<12):
 				bigCnts.append(c)
 				continue
 		else:
@@ -192,7 +191,11 @@ def analyseImgPart(thresh, colorImg, small=False, folder="", saveFigs=False, pri
 					ones_found.append(c)
 
 	allContours = []
-	digitCntsBig = imutils.contours.sort_contours(bigCnts, method="left-to-right")[0]
+	digitCntsBig = []
+	allContoursSorted = []
+	if len(bigCnts)>0:
+		digitCntsBig = imutils.contours.sort_contours(bigCnts, method="left-to-right")[0]
+	# TODO delete ones merging stuff!
 	if len(ones_found)>0:
 		digitOnesBig = imutils.contours.sort_contours(ones_found, method="left-to-right")[0]
 		if (len(digitOnesBig) % 2) != 0:
@@ -206,7 +209,8 @@ def analyseImgPart(thresh, colorImg, small=False, folder="", saveFigs=False, pri
 			allContours.append(i)
 	for i in digitCntsBig:
 		allContours.append(i)
-	allContoursSorted =  imutils.contours.sort_contours(allContours, method="left-to-right")[0]
+	if len(allContours)>0:
+		allContoursSorted =  imutils.contours.sort_contours(allContours, method="left-to-right")[0]
 	
 	rects = []
 	# adapt bounding rect for ones:
@@ -229,6 +233,13 @@ def analyseImgPart(thresh, colorImg, small=False, folder="", saveFigs=False, pri
 
 	return result
 
+def checkCorrectness(big,small):
+	if len(big) == 5 and len(small) == 3:
+		if "?" not in big and "?" not in small:
+			if big[0] == big[1] == "0":
+				return True # first 2 big numers are 0!
+	return False
+
 def analyseImg(imgName, folder="", saveFigs=False, print_=False, skipCrop=False):
 	cropped2, xR, yR = None, 0,0
 
@@ -242,38 +253,68 @@ def analyseImg(imgName, folder="", saveFigs=False, print_=False, skipCrop=False)
 	saveImg(thresh, "thresh", folder=folder, saveFig=saveFigs)
 
 	bigStr   = analyseImgPart(thresh[0:60, 0:195], cropped2[0:60, 0:195], small=False, folder=folder+"/Big", saveFigs=saveFigs, print_=print_)
-	smallStr = analyseImgPart(thresh[0:42, 190:thresh.shape[1]], cropped2[0:42, 190:thresh.shape[1]], small=True, folder=folder+"/Small", saveFigs=saveFigs, print_=print_)
+	smallStr = analyseImgPart(thresh[0:42, 195:thresh.shape[1]], cropped2[0:42, 195:thresh.shape[1]], small=True, folder=folder+"/Small", saveFigs=saveFigs, print_=print_)
 	textRes = bigStr+","+smallStr
-	# Final Image:
-	tmpIMG = cv2.putText(cropped2, textRes, (int(xR/4) ,int(yR/4)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,250), 2, cv2.LINE_AA, False)
+	colorFinal = (10, 10 , 255)
+	correct = (checkCorrectness(bigStr, smallStr))
+	if correct:
+		colorFinal = (30, 180 , 30)
+
+	tmpIMG = cv2.putText(cropped2, textRes, (int(xR/4) ,int(yR/4)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, colorFinal, 2, cv2.LINE_AA, False)
 	saveImg(tmpIMG, "finalImg", folder=folder, saveFig=saveFigs)
 
-	return textRes, tmpIMG
+	return textRes, tmpIMG, correct
 
-def analyseFolder(dpath, resultFolder="", breakAfter=10):
-	i = 0
+def creation_date(path_to_file):
+	import datetime
+	s = path_to_file[path_to_file.find('cropped'):]
+	s = s.replace("cropped", "").replace(".png", "")
+	a = datetime.datetime.strptime("2023-08-"+s,"%Y-%m-%d-%H%M%S")
+	return a
+	# 0_cropped01-000018
+	# 0_2023-07-25 21:13:33
+
+def renameCreationDate(dpath):
+	import datetime
+	import shutil
 	for filename in os.listdir(dpath):
+		f = os.path.join(dpath, filename)
+		t = creation_date(f)
+		shutil.copyfile(f, "data/0_"+str(t)+".png")
+
+def analyseFolder(dpath, resultFolder="", breakAfter=10000000):
+	i = 0
+	correctResults = []
+	for filename in sorted(os.listdir(dpath)):
 		f = os.path.join(dpath, filename)
 		# checking if it is a file
 		if os.path.isfile(f):
-			text_result, imgResult = analyseImg(f, saveFigs=False, folder="orginalDataResults", print_=False, skipCrop=True)
-			print(text_result)
-			if len(resultFolder)>0:
-				print(f)
-				saveImg(imgResult, filename, folder="orginalDataResults",saveFig=True)
+			text_result, imgResult, correct = analyseImg(f, saveFigs=False, folder="orginalDataResults", print_=False, skipCrop=True)
+			saveImg(imgResult, filename, folder="orginalDataResults",saveFig=False)
+			if correct:
+				correctResults.append(text_result)
+				print("Correct result:", filename, text_result, i)
+				if len(resultFolder)>0: # save only correct imgs
+					saveImg(imgResult, filename, folder="orginalDataResults",saveFig=False)
 		i+=1
 		if i==breakAfter:
-			print("Finish afer", breakAfter)
-			return
-
+			print("Finish analysing imgs afer", breakAfter)
+			break
+	print("Analysed", i, "files", "corect:", len(correctResults), str(round(i/len(correctResults),2))+"%")
+	return correctResults
 # For a single file do:
 # text_result, imgResult = analyseImg("general_processingData/orginal2.jpg", folder="general_processingData",print_=True, saveFigs=True)
 # print(text_result)
 
 # For an already cropped image do:
-# text_result, imgResult = analyseImg("orginalDataStorage/0_cropped07-030023.png", folder="orginalDataResults",print_=True, saveFigs=True, skipCrop=True)
+#text_result, imgResult, correct = analyseImg("data/0_2023-08-03 20:00:22.png", folder="orginalDataResults",print_=True, saveFigs=True, skipCrop=True)
 # print(text_result)
 
 
 #TODO many errors in rectangle / bounding box detection! requires improvement!
-analyseFolder("orginalDataStorage/", resultFolder="orginalDataResults")
+# Analysed 698 files corect: 83 8.41%
+analyseFolder("data/", resultFolder="orginalDataResults")
+
+
+# executed only once to rename all files!
+#renameCreationDate("data/")
