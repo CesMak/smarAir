@@ -13,11 +13,11 @@ INDEX = 0
 # define the dictionary of digit segments so we can identify
 # each digit on the thermostat
 DIGITS_LOOKUP = [
-	[1, 1, 1, 0, 1, 1, 1],
-	[0, 0, 1, 0, 0, 1, 0],
-	[1, 0, 1, 1, 1, 1, 0],
-	[1, 0, 1, 1, 0, 1, 1],
-	[0, 1, 1, 1, 0, 1, 0],
+	[1, 1, 1, 0, 1, 1, 1],#  0
+	[0, 0, 1, 0, 0, 1, 0],#  1
+	[1, 0, 1, 1, 1, 0, 1],#  2
+	[1, 0, 1, 1, 0, 1, 1],#  3
+	[0, 1, 1, 1, 0, 1, 0],#  4
 	[1, 1, 0, 1, 0, 1, 1],#: 5,
 	[1, 1, 0, 1, 1, 1, 1],#: 6,
 	[1, 0, 1, 0, 0, 1, 0],#: 7,
@@ -32,28 +32,30 @@ def saveImg(img, name="_", folder="", print_=False, saveFig=False):
 		cv2.imwrite(folder+"/"+img_name, img)
 		INDEX+=1
 
-def getBoundingRect(countour, bigNumber=False, isOne=False):
+def getBoundingRect(countour):
+	# find out if there is a one contained
 	oneBigFactor   = 20
 	oneSmallFactor = 5
 	(x, y, w, h) = cv2.boundingRect(countour)
-	if w*h >550 and w*h <1000: # one big
+	if h>50 and h<65 and w*h >450 and w*h <550 and w>5 and w<12:
+		print("I found a big Number 1!")
 		x -= oneBigFactor
 		w += oneBigFactor
-	elif w*h <500: # one small
-		x -= oneSmallFactor
-		w += oneSmallFactor
+	# elif w*h <500: # one small
+	# 	x -= oneSmallFactor
+	# 	w += oneSmallFactor
 	return (x,y,w,h)
 
 def getNumberOfRectangle(rect, img, colorImg, folder="", saveFig=False, print_=False):
-	colorImg = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB) # COLOR_BGR2GRAY
+	#colorImg = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB) # COLOR_BGR2GRAY
 	(x, y, w, h) = rect
 	# corrector factor!
-	y=y+2
-	h=h-4
-	x+=2
-	w-=4
+	# y=y+2
+	# h=h-4
+	# x+=2
+	# w-=4
 	roi = img[y:y + h, x:x + w]
-	saveImg(cv2.rectangle(deepcopy(colorImg),(x,y),(x+w,y+h),(30,255,255),1), "roi", folder=folder)
+	saveImg(cv2.rectangle(deepcopy(colorImg),(x,y),(x+w,y+h),(30,255,255),1), "roi", folder=folder, saveFig=saveFig)
 	(roiH, roiW) = roi.shape
 	(dW, dH) = (int(roiW * 0.25), int(roiH * 0.15))
 	dHC = int(roiH * 0.05)
@@ -86,17 +88,18 @@ def getNumberOfRectangle(rect, img, colorImg, folder="", saveFig=False, print_=F
 			area = 0.001
 		tmp = cv2.putText(tmp, str(round(total/float(area),2)), (x+xA+10, y+yA+10), cv2.FONT_HERSHEY_SIMPLEX, 0.2, (0,0,250), 1, cv2.LINE_AA, False)
 		saveImg(tmp, "segment"+str(i)+".png", folder=folder, saveFig=saveFig)	
-		if total / float(area) > 0.75:
+		if total / float(area) > 0.45:
 			on[i]= 1
 	# find on matching in: DIGITS_LOOKUP
 	for i,lockup in enumerate(DIGITS_LOOKUP):
 		if lockup == on:
-			if print_:print(lockup, on, w*h, "-->", i)
 			if w*h>1000:
+				if print_:print(lockup, on, w,h, w*h, "-->", i, "BIG NUMBER")
 				return "B"+str(i) # Big Number!
 			else:
+				if print_:print(lockup, on, w, h, w*h, "-->", i, "SMALL NUMBER")
 				return "S"+str(i) # Small Number!
-	if print_:print("No number found: ", on, w*h)
+	if print_:print("No number found: ", on, w*h, w, h)
 	if w*h>1000:
 		return "B?"# Big Number!
 	else:
@@ -146,44 +149,60 @@ def cropImg(imgName, folder="", saveFigs=False, print_=False):
 	saveImg(cropped2, "cropped2", folder=folder, saveFig=saveFigs)
 	return cropped2, xR, yR
 
+
+def rotate(image, angle, center = None, scale = 1.0):
+    (h, w) = image.shape[:2]
+    if center is None:
+        center = (w / 2, h / 2)
+    # Perform the rotation
+    M = cv2.getRotationMatrix2D(center, angle, scale)
+    rotated = cv2.warpAffine(image, M, (w, h))
+    return rotated
+
 def analyseImg(imgName, folder="", saveFigs=False, print_=False, skipCrop=False):
 	cropped2, xR, yR = None, 0,0
 	if skipCrop:
 		cropped2 = cv2.imread(imgName)
-		xR, yR, c = cropped2.shape
+		rotated = rotate(cropped2, 2)
+		xR, yR, c = rotated.shape
+		cropped2 = rotated[12:xR-30, 1:yR-1]
+		gray = cv2.cvtColor(cropped2, cv2.COLOR_BGR2GRAY)
+		blure = cv2.GaussianBlur(gray, (5, 5), 0)
+		thresh = cv2.adaptiveThreshold(blure, 255, 1, 1, 15, 4)
+		saveImg(thresh, "thresh", folder=folder, saveFig=saveFigs)
+		#xR, yR, c = thresh.shape
 	else:
 		cropped2, xR, yR = cropImg(imgName, folder=folder, saveFigs=saveFigs, print_=print_)
 
-	gray3 = cv2.cvtColor(cropped2, cv2.COLOR_BGR2GRAY)
-	edged2 = cv2.Canny(gray3, 40, 80, 255)
-	saveImg(edged2, "edged2", folder=folder, saveFig=saveFigs)
+	cc, hir = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
+	cv2.drawContours(thresh, cc, -1, (255, 255, 255), thickness=2)
+	saveImg(thresh, "contours", folder=folder, saveFig=saveFigs)
 
-	cc, hir = cv2.findContours(edged2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-	contours = cv2.findContours(edged2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-	cv2.drawContours(cropped2, cc, -1, (0, 0, 0), thickness=5)
-	saveImg(cropped2, "cropped2", folder=folder, saveFig=saveFigs)
-
+	contours = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 	cnts = imutils.grab_contours(contours)
 	bigCnts = []
 	digitCnts = []
 	ones_foundBig = []
-	tmpIMG = deepcopy(cropped2)
+	digitCntsOnesBig = []
+	tmpIMG = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
+	digits     = deepcopy(tmpIMG)
 
 	# loop over the digit area candidates
 	for c in cnts:
 		# compute the bounding box of the contour
 		(x, y, w, h) = cv2.boundingRect(c)
-		tmpIMG = cv2.rectangle(tmpIMG,(x,y),(x+w,y+h),(255,255,255),1)
-		tmpIMG = cv2.putText(tmpIMG, str(w*h), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0,0,250), 1, cv2.LINE_AA, False)
+		tmpIMG = cv2.rectangle(tmpIMG,(x,y),(x+w,y+h),(0,255,0),1)
+		tmpIMG = cv2.putText(tmpIMG, str(w*h), (x+2, y+10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0,0,250), 1, cv2.LINE_AA, False)
 	saveImg(tmpIMG, "boundingRect", folder=folder, saveFig=saveFigs)
 
 	# loop over the digit area candidates
 	for c in cnts:
 		# compute the bounding box of the contour
 		(x, y, w, h) = cv2.boundingRect(c)
-		if w*h>400:
-			if w*h<600 and w<20:
+		if w*h>300:
+			print(w,h, w*h)
+			if w*h<650 and w<25:
 				digitCnts.append(c) # small digits on the right
 				continue
 			elif w*h>1500:
@@ -203,8 +222,7 @@ def analyseImg(imgName, folder="", saveFigs=False, print_=False, skipCrop=False)
 		if (len(digitOnesBig) % 2) != 0:
 			digitOnesBig = digitOnesBig[:-1]
 
-		# merge ones contours:
-		digitCntsOnesBig = []
+	# merge ones contours:
 		for i in range(len(digitOnesBig)-1):
 			digitCntsOnesBig.append(vstack([digitOnesBig[i], digitOnesBig[i+1]]))
 
@@ -215,55 +233,44 @@ def analyseImg(imgName, folder="", saveFigs=False, print_=False, skipCrop=False)
 	for i in digitCntsBig:
 		allContours.append(i)
 	allContoursSorted =  imutils.contours.sort_contours(allContours, method="left-to-right")[0]
+	
 	rects = []
+	# adapt bounding rect for ones:
 	for c in allContoursSorted:
 		rects.append(getBoundingRect(c))
 
-	tmpIMG = cropped2
-	# for c in digitCntsSmall:
-	# 	# extract the digit ROI
-	# 	(x, y, w, h) = cv2.boundingRect(c)
-	# 	cv2.rectangle(tmpIMG,(x,y),(x+w,y+h),(255,0,0),3)
-	# for c in digitCntsBig:
-	# 	# extract the digit ROI
-	# 	(x, y, w, h) = cv2.boundingRect(c)
-	# 	cv2.rectangle(tmpIMG,(x,y),(x+w,y+h),(0,0,255),3)
-	# for c in digitCntsOnesBig:
-	# 	# extract the digit ROI
-	# 	(x, y, w, h) = cv2.boundingRect(c)
-	# 	cv2.rectangle(tmpIMG,(x,y),(x+w,y+h),(0,255,255),3)
-	for c in rects:
-		(x, y, w, h) = c
-		cv2.rectangle(tmpIMG,(x,y),(x+w,y+h),(26,25,255),2)		
-	saveImg(tmpIMG, "boundingRect2", folder=folder, saveFig=saveFigs)
-
-	# convert 2 white !
-	gray4 = cv2.cvtColor(cropped2, cv2.COLOR_BGR2GRAY)
-	ret, thresh = cv2.threshold(gray4, 0, 255,	cv2.THRESH_BINARY_INV)
-	saveImg(thresh, "thresh", folder=folder, saveFig=saveFigs)
-	saveImg(cropped2, "cropped2", folder=folder, saveFig=saveFigs)
+	#tmpIMG = cropped2
+	for c in digitCntsSmall:
+		# extract the digit ROI
+		(x, y, w, h) = cv2.boundingRect(c)
+		cv2.rectangle(digits,(x,y),(x+w,y+h),(255,0,0),3)
+	for c in digitCntsBig:
+		# extract the digit ROI
+		(x, y, w, h) = cv2.boundingRect(c)
+		cv2.rectangle(digits,(x,y),(x+w,y+h),(0,0,255),3)
+	for c in digitCntsOnesBig:
+		# extract the digit ROI
+		(x, y, w, h) = cv2.boundingRect(c)
+		cv2.rectangle(digits,(x,y),(x+w,y+h),(0,255,255),3)
+	saveImg(digits, "digits", folder=folder, saveFig=saveFigs)
 
 	result = ""
 	for r in rects:
 		result+=getNumberOfRectangle(r, thresh, cropped2,folder=folder, saveFig=saveFigs, print_=print_)
 
-	if sum(char == 'S' for char in result) == 3:
-		result = result.replace("S", ',', 1) # replace first S
+	if sum(char == 'B' for char in result) == 5:
+		result = result.replace("S", ',', 1)
 		result = result.replace("S", "")
 		result = result.replace("B", "")
 
 	# Final Image:
-	tmpIMG = cv2.putText(cropped2, result, (int(xR/2) ,int(yR/3)+15), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,250), 2, cv2.LINE_AA, False)
+	tmpIMG = cv2.putText(cropped2, result, (int(xR/4) ,int(yR/4)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,250), 2, cv2.LINE_AA, False)
 	saveImg(tmpIMG, "finalImg", folder=folder, saveFig=saveFigs)
 
 	return result, tmpIMG
-	#getNumberOfRectangle(rects, thresh, cropped2)
-	# # # import pytesseract
-	# # # from PIL import Image
-	# # # img = Image.open('/home/markus/Desktop/4.png')
-	# # # print(pytesseract.image_to_string(img))
 
-def analyseFolder(dpath, resultFolder=""):
+def analyseFolder(dpath, resultFolder="", breakAfter=10):
+	i = 0
 	for filename in os.listdir(dpath):
 		f = os.path.join(dpath, filename)
 		# checking if it is a file
@@ -273,15 +280,19 @@ def analyseFolder(dpath, resultFolder=""):
 			if len(resultFolder)>0:
 				print(f)
 				saveImg(imgResult, filename, folder="orginalDataResults",saveFig=True)
+		i+=1
+		if i==breakAfter:
+			print("Finish afer", breakAfter)
+			return
 
 # For a single file do:
 # text_result, imgResult = analyseImg("general_processingData/orginal2.jpg", folder="general_processingData",print_=True, saveFigs=True)
 # print(text_result)
 
 # For an already cropped image do:
-# text_result, imgResult = analyseImg("orginalDataStorage/0_cropped25-122345.png", folder="general_processingData",print_=True, saveFigs=True, skipCrop=True)
-# print(text_result)
+text_result, imgResult = analyseImg("orginalDataStorage/0_cropped28-200023.png", folder="orginalDataResults",print_=True, saveFigs=True, skipCrop=True)
+print(text_result)
 
 
 #TODO many errors in rectangle / bounding box detection! requires improvement!
-analyseFolder("orginalDataStorage/", resultFolder="orginalDataResults")
+# analyseFolder("orginalDataStorage/", resultFolder="orginalDataResults")
