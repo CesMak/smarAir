@@ -265,22 +265,27 @@ def analyseImg(imgName, folder="", saveFigs=False, print_=False, skipCrop=False)
 
 	return textRes, tmpIMG, correct
 
-def creation_date(path_to_file):
+def creation_date(s):
 	import datetime
-	s = path_to_file[path_to_file.find('cropped'):]
-	s = s.replace("cropped", "").replace(".png", "")
-	a = datetime.datetime.strptime("2023-08-"+s,"%Y-%m-%d-%H%M%S")
-	return a
-	# 0_cropped01-000018
-	# 0_2023-07-25 21:13:33
+	# s = path_to_file[path_to_file.find('cropped'):]
+	# s = s.replace("cropped", "").replace(".png", "")
+	# a = datetime.datetime.strptime("2023-08-"+s,"%Y-%m-%d-%H%M%S")
+	# return a
+	print("huhu",s)
+	s = s.replace(".png", "").replace("0_","")
+	a = datetime.datetime.strptime(s,"%Y-%m-%d %H:%M:%S")
+	if a.day>22:
+		month = "07"
+		s=s.replace("-08-","-07-")
+	return s
 
 def renameCreationDate(dpath):
 	import datetime
 	import shutil
 	for filename in os.listdir(dpath):
 		f = os.path.join(dpath, filename)
-		t = creation_date(f)
-		shutil.copyfile(f, "data/0_"+str(t)+".png")
+		t = creation_date(filename)
+		shutil.copyfile(f, "data2/0_"+str(t)+".png")
 
 def analyseFolder(dpath, resultFolder="", breakAfter=10000000):
 	i = 0
