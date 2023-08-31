@@ -2,13 +2,14 @@
 Reading out a seven segement display and convert the image in a number
 seems to be an easy task however in practice I figured out it is not....
 
-<img src="doc/1.png" alt="imgTOtext" width="200"/>
+<img src="doc/1.png" alt="imgTOtext"/>
 
 ## Why do I need it at all?
 Sometimes you have to deal with old analog hardware (water clock, electricity meter).
 
-**Hardware setup**
-<img src="doc/2.png" alt="imgTOtext" width="200"/>
+### Hardware setup
+
+<img src="doc/2.png" alt="imgTOtext" />
 
 ## Basic image processing approach
 imgs here SEE ORGINAL dATA RESULTS.
