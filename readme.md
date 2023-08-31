@@ -141,7 +141,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 * image processing is done [using](https://pyimagesearch.com/2017/02/13/recognizing-digits-with-opencv-and-python/)
 * Next we use this code TODO
 * to copy files:
-* `scp pitwo@pitwo:/home/pitwo/*.png /home/markus/Desktop/smarAir/imgProcessing/orginalDataStorage/`
+* `scp pitwo@pitwo:/home/pitwo/imgReader/imgs/*.png /home/markus/Desktop/smarAir/imgProcessing/orginalDataStorage/`
 * make a img_reader.timer and img_reader.service file - content see in files
 ```bash
 chmod +x imgReader/imgScraper.py
