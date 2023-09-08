@@ -1,0 +1,4 @@
+2023-08-20 22:48:38 DateTime	Entry	Power	Temperature_outside	Humidity_outside	Temperature_inside	Humidity_inside	CorrectReadingsIn	CorrectReadingsOut
+2023-08-20 23:01:36 	1	-222.0	-222.0	-222.0	-222.0	9	9
+2023-08-20 23:14:34 	2	-222.0	-222.0	-222.0	-222.0	9	9
+2023-08-20 23:27:32 	3	-222.0	-222.0	-222.0	-222.0	9	9

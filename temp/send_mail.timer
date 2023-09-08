@@ -1,0 +1,10 @@
+[Unit]
+Description= runs once a day a timer
+
+[Timer]
+OnCalendar=*-*-* 11:00:00
+Unit=send_mail.service
+Persistent=true
+
+[Install]
+WantedBy=default.target

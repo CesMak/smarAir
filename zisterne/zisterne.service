@@ -1,0 +1,10 @@
+[Unit]
+Description=zisterne service
+
+[Service]
+Restart=always
+RestartSec=180s
+ExecStart=/bin/bash /home/pitwo/zisterne/zisterne.sh
+
+[Install]
+WantedBy=multi-user.target

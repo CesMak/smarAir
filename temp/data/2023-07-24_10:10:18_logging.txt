@@ -1,0 +1,1 @@
+2023-07-24 10:26:56 DateTime	Entry	Power	Temperature_outside	Humidity_outside	Temperature_inside	Humidity_inside	CorrectReadingsIn	CorrectReadingsOut
