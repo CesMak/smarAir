@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates
 import datetime
 
-password_send_mail = 'lmhtwctznfjulybx'          # TODO edit PW here!
+password_send_mail = ''          # TODO edit PW here!
 email_add          = '2f4yor@gmail.com'     # check if sending works: https://myaccount.google.com/lesssecureapps?pli=1
 send_mail_to       = 'lamprechtmarkus1@gmail.com'
 
