@@ -19,11 +19,12 @@ Sometimes you have to deal with old analog hardware (water clock, electricity me
 [inspired by](https://pyimagesearch.com/2017/02/13/recognizing-digits-with-opencv-and-python/)
 imgs here SEE ORGINAL dATA RESULTS.
 
+TODO !!! 
 
 
 ## Neuronal Network approach
 
-
+TODO !!! 
 
 # Zisterne
 <img src="doc/zistDrawing.png" alt="imgTOtext"/>
@@ -44,7 +45,9 @@ scp pitwo@pitwo:/home/pitwo/zisterne/zisterne.txt /home/markus/Desktop/smarAir/z
 |---------| ----| --|  --| 
 |  1767** | 2.51m |  2.51xpix1.25²=12.321 |  100 |
 |  0? | 0m |  0 |  0 |
+
 *Water pillar: Water level in m measured by hand from the ground
+
 **Under heavy rain fail this value can be 1824. In this case the preasure on the sensor is temporary a little bit higher.
 
 
@@ -104,7 +107,7 @@ TODO do the area calculation!
 TODO
 Or using wheather data [here](https://www.wetterkontor.de/de/wetter/deutschland/rueckblick.asp?id=U209)
 e.g. on 12.09.23 it rained 14.1 l/m²
-
+pip3 install adafruit-circuitpython-dht
 # Temperature Data
 
 ## Install
@@ -128,3 +131,7 @@ python3 dht_logger.py
 journalctl -u dht_logger.service
  ```
 
+
+
+# Influx DB and Garfana
+save the data in garfana and influx db!
