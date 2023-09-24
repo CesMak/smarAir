@@ -1,11 +1,13 @@
 import time
-import Adafruit_DHT
+# used lib is: https://github.com/adafruit/Adafruit_CircuitPython_DHT
+# lib usage: https://learn.adafruit.com/dht-humidity-sensing-on-raspberry-pi-with-gdocs-logging/python-setup
+import adafruit_dht 
 import logging
 import os
+import board 
 
-sensor  = 22
-dev_in = 4  # 3.3V
-dev_out  = 17 # 5V
+dhtSensor1 = adafruit_dht.DHT22(board.D4)# 3.3V
+dhtSensor2 = adafruit_dht.DHT22(board.D17)# 5V
 sleep_secs  = 10
 use_print   = False
 
@@ -36,16 +38,23 @@ def read(dev):
 	temp = -111
 	hum  = -111
 	try:
-		hum, temp  = Adafruit_DHT.read_retry(sensor, dev)
+		hum, temp  = dev.humidity, dev.temperature
 		if use_print:
 			print("PIN "+str(dev)+" :", temp, hum)
+	# except RuntimeError as error:
+	# 	# Errors happen fairly often, DHT's are hard to read, just keep going
+	# 	print(error.args[0])
+	# 	time.sleep(2.0)
+	# except Exception as error:
+	# 	dev.exit()
+	# 	raise error			
 	except Exception as e:
 		if use_print:
 			print(e)
 		error = 1
 	return temp, hum, error
 
-def read2dev(dev_in, dev_out, timeout=sleep_secs):
+def read2dev(dhtSensor1, dhtSensor2, timeout=sleep_secs):
 	hum_in   = -111
 	temp_in  = -111
 	hum_out  = -111
@@ -61,9 +70,9 @@ def read2dev(dev_in, dev_out, timeout=sleep_secs):
 	error_out    = 0
 	while True:
 		error = 0
-		temp_in, hum_in, error_in    = read(dev_in)
+		temp_in, hum_in, error_in    = read(dhtSensor1)
 		time.sleep(1)
-		temp_out, hum_out, error_out = read(dev_out)
+		temp_out, hum_out, error_out = read(dhtSensor2)
 		if tmp>=timeout:
 			if use_print:	print(temp_arr_in, hum_arr_in, temp_arr_out, hum_arr_out)
 			if len(temp_arr_in)  == 0:	temp_arr_in.append(-222)
@@ -85,7 +94,7 @@ def read2dev(dev_in, dev_out, timeout=sleep_secs):
 		tmp = tmp+1
 
 file_name ="/home/pitwo/temp/"+time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())+"_logging.txt"
-temperature_inside, humidity_inside, temperature_outside, humidity_outside, ci, co = read2dev(dev_in, dev_out)
+temperature_inside, humidity_inside, temperature_outside, humidity_outside, ci, co = read2dev(dhtSensor1, dhtSensor2)
 if use_print:
     print("Start values outside", temperature_inside, humidity_inside, humidity_outside, temperature_outside)
     print("Logging started to", file_name)
@@ -96,7 +105,7 @@ if use_print:
 
 i = 1
 while True:
-	temperature_inside, humidity_inside, temperature_outside, humidity_outside, ci, co = read2dev(dev_in, dev_out)
+	temperature_inside, humidity_inside, temperature_outside, humidity_outside, ci, co = read2dev(dhtSensor1, dhtSensor2)
 	result = "\t"+str(i)+"\t"+str(temperature_outside)+"\t"+str(humidity_outside)+"\t"+str(temperature_inside)+"\t"+str(humidity_inside)+"\t"+str(ci)+"\t"+str(co)
 	logging.info(result)
 	timee = time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())

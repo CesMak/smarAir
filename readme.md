@@ -35,9 +35,17 @@ measure water level with [ a pegelsonde in combination with a wmos D1 mini](http
 
 after installation the tasmota range can be seen at: http://192.168.178.xx
 
-## Copy files from pitwo
-```
+## Important Bash commands copy, ssh cd etc.
+```bash
+#Copy files from pitwo
 scp pitwo@pitwo:/home/pitwo/zisterne/zisterne.txt /home/markus/Desktop/smarAir/zisterne/zisterne.txt
+# Access with no password:
+# copy the public key of your laptop  in ~/.ssh/id_rsa.pub
+# to the ~/.ssh/authorized_keys file of your raspberry pi (pi zero)
+
+# Use this alias in your bashrc.
+
+alias cd_pitwo='ssh pitwo@pitwo'
 ```
 
 ## Transform Data
@@ -113,7 +121,8 @@ pip3 install adafruit-circuitpython-dht
 ## Install
 ```bash
 # install adafruit lib for DHT22 sensors
-pip3 install adafruit-circuitpython-dht # see https://github.com/adafruit/Adafruit_Python_DHT
+pip3 install adafruit-circuitpython-dht # see https://github.com/adafruit/Adafruit_Python_DHT -> https://learn.adafruit.com/dht-humidity-sensing-on-raspberry-pi-with-gdocs-logging/python-setup
+sudo apt-get install libgpiod2
 sudo apt-get update
 
 # copy service files
@@ -131,7 +140,12 @@ python3 dht_logger.py
 journalctl -u dht_logger.service
  ```
 
+ TODO see why import adafruit does not work. and thereby script is not working curently!
+
 
 
 # Influx DB and Garfana
 save the data in garfana and influx db!
+
+
+
