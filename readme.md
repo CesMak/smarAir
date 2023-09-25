@@ -147,5 +147,38 @@ journalctl -u dht_logger.service
 # Influx DB and Garfana
 save the data in garfana and influx db!
 
+install influxDb on the server:
+https://www.youtube.com/watch?v=-TJuiY9KppE
+```bash 
+# setup docker influxdb container (once)
+docker run -p 8080:8086 -v $PWD/config:/etc/influxdb2 -v $PWD/data:/var/lib/influxdb2 --net influxdb --name influxdb -d influxdb
+#after reboot to start influxdb container:
+docker container start influxdb
+# sidenote to get current timestamp in ns
+date +%s%N
+```
+
+see this video: https://www.youtube.com/watch?v=nhDKa72QoNQ min 18
+
+```bash
+# sending a Temp/Hum DHT22 PIN 4 value to the influxDB database
+curl -X POST --data 'kellerWetter,raum=keller1,sensor=DHT22_4 temperature=7,humidity=56 1695673849242967410' -H 'Authorization: Token TOKENHERE' -H 'Content-Type: text/plain' 'http://192.168.178.143:8080/api/v2/write?bucket=home&org=mlacht'
+
+# sending a zistern water level to influxDB database
+# TODO
+```
+ this worked see influxDB website to check the data!
+
+
+inside the scripts:
+
+```python
+import requests
+
+url_string = 'http://localhost:8086/write?db=mydb'
+data_string = 'cpu_load_short,host=server01,region=us-west value=0.64 1434055562000000000'
+
+r = requests.post(url_string, data=data_string)
+```
 
 

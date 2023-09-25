@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import time
 # used lib is: https://github.com/adafruit/Adafruit_CircuitPython_DHT
 # lib usage: https://learn.adafruit.com/dht-humidity-sensing-on-raspberry-pi-with-gdocs-logging/python-setup
@@ -112,4 +113,3 @@ while True:
 	if use_print:
 		print(timee+result)
 	i = i+1
-

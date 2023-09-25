@@ -4,9 +4,9 @@ After=multi-user.target
 
 [Service]
 Type=idle
+User=pitwo
 ExecStart=/usr/bin/python3 /home/pitwo/temp/dht_logger.py
 Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=default.target
-
